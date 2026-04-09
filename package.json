@@ -1,0 +1,18 @@
+{
+  "name": "csv2json-cli",
+  "version": "1.0.0",
+  "description": "Convert CSV files to JSON — browser drag-and-drop UI + Node.js CLI",
+  "main": "js/converter.js",
+  "bin": {
+    "csv2json": "./bin/csv2json.js"
+  },
+  "scripts": {
+    "start": "node bin/csv2json.js",
+    "test": "node test/test.js"
+  },
+  "keywords": ["csv", "json", "converter", "cli", "parser"],
+  "license": "MIT",
+  "engines": {
+    "node": ">=14.0.0"
+  }
+}

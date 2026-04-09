@@ -1,0 +1,224 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>CSV → JSON Converter</title>
+  <link rel="stylesheet" href="css/style.css" />
+  <link rel="preconnect" href="https://fonts.googleapis.com" />
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin />
+  <link href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:ital,wght@0,300;0,400;0,500;0,600;1,300&family=IBM+Plex+Sans:wght@300;400;500&display=swap" rel="stylesheet" />
+</head>
+<body>
+
+  <div class="scanlines" aria-hidden="true"></div>
+
+  <div class="app">
+
+    <!-- ── Header ── -->
+    <header class="header">
+      <div class="header__left">
+        <div class="header__logo">
+          <span class="logo__bracket">[</span>
+          <span class="logo__csv">CSV</span>
+          <span class="logo__arrow">→</span>
+          <span class="logo__json">JSON</span>
+          <span class="logo__bracket">]</span>
+        </div>
+        <span class="header__version">v1.0.0</span>
+      </div>
+      <div class="header__right">
+        <span class="header__stat" id="hdrStat">ready</span>
+        <div class="header__led" id="hdrLed" aria-hidden="true"></div>
+      </div>
+    </header>
+
+    <!-- ── Main grid ── -->
+    <main class="main">
+
+      <!-- Left column: upload + options -->
+      <section class="panel panel--left">
+
+        <!-- Drop zone -->
+        <div class="dropzone" id="dropzone" role="button" tabindex="0"
+             aria-label="Drop CSV file here or click to browse">
+          <div class="dropzone__inner" id="dropzoneInner">
+            <div class="dropzone__icon" aria-hidden="true">
+              <svg width="48" height="48" viewBox="0 0 48 48" fill="none">
+                <rect x="8" y="6" width="24" height="30" rx="2" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M32 6l8 8v28H16" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M32 6v8h8" stroke="currentColor" stroke-width="1.5"/>
+                <path d="M20 22h12M20 27h8" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+                <path d="M24 36v8M20 40l4 4 4-4" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+              </svg>
+            </div>
+            <p class="dropzone__title">Drop your CSV here</p>
+            <p class="dropzone__sub">or <span class="dropzone__link">browse files</span></p>
+            <p class="dropzone__hint">Supports .csv — up to 50 MB</p>
+          </div>
+          <input type="file" id="fileInput" accept=".csv,text/csv" class="dropzone__input" aria-hidden="true" tabindex="-1" />
+        </div>
+
+        <!-- Options -->
+        <div class="options-panel">
+          <div class="options-panel__title">// options</div>
+
+          <div class="option-row">
+            <label class="option-label" for="optDelimiter">Delimiter</label>
+            <select class="option-select" id="optDelimiter">
+              <option value="auto">Auto-detect</option>
+              <option value=",">Comma (,)</option>
+              <option value=";">Semicolon (;)</option>
+              <option value="\t">Tab (\t)</option>
+              <option value="|">Pipe (|)</option>
+            </select>
+          </div>
+
+          <div class="option-row">
+            <label class="option-label" for="optHeader">First row is header</label>
+            <div class="toggle" id="optHeaderToggle" role="checkbox" aria-checked="true" tabindex="0">
+              <div class="toggle__knob"></div>
+            </div>
+          </div>
+
+          <div class="option-row">
+            <label class="option-label" for="optTypes">Auto-cast types</label>
+            <div class="toggle toggle--on" id="optTypesToggle" role="checkbox" aria-checked="true" tabindex="0">
+              <div class="toggle__knob"></div>
+            </div>
+          </div>
+
+          <div class="option-row">
+            <label class="option-label" for="optNulls">Empty → null</label>
+            <div class="toggle toggle--on" id="optNullsToggle" role="checkbox" aria-checked="true" tabindex="0">
+              <div class="toggle__knob"></div>
+            </div>
+          </div>
+
+          <div class="option-row">
+            <label class="option-label">Output format</label>
+            <select class="option-select" id="optFormat">
+              <option value="array">Array of objects</option>
+              <option value="object">Keyed by first col</option>
+              <option value="split">Split (cols + rows)</option>
+            </select>
+          </div>
+
+          <div class="option-row">
+            <label class="option-label">Indent</label>
+            <select class="option-select" id="optIndent">
+              <option value="2">2 spaces</option>
+              <option value="4">4 spaces</option>
+              <option value="tab">Tab</option>
+              <option value="0">Minified</option>
+            </select>
+          </div>
+        </div>
+
+      </section>
+
+      <!-- Right column: output -->
+      <section class="panel panel--right">
+
+        <!-- Toolbar -->
+        <div class="output-toolbar" id="outputToolbar">
+          <div class="output-toolbar__info" id="toolbarInfo">
+            <span class="output-toolbar__filename" id="toolbarFilename">—</span>
+            <span class="output-toolbar__meta" id="toolbarMeta"></span>
+          </div>
+          <div class="output-toolbar__actions">
+            <button class="tbtn" id="btnPreviewToggle" title="Switch view" disabled>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="1" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                <rect x="8" y="1" width="5" height="12" rx="1" stroke="currentColor" stroke-width="1.3"/>
+              </svg>
+              Table
+            </button>
+            <button class="tbtn" id="btnCopy" title="Copy JSON" disabled>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <rect x="4" y="4" width="8" height="9" rx="1" stroke="currentColor" stroke-width="1.3"/>
+                <path d="M4 4V3a1 1 0 0 0-1-1H3a1 1 0 0 0-1 1v7a1 1 0 0 0 1 1h1" stroke="currentColor" stroke-width="1.3" stroke-linecap="round"/>
+              </svg>
+              Copy
+            </button>
+            <button class="tbtn tbtn--primary" id="btnDownload" title="Download JSON" disabled>
+              <svg width="14" height="14" viewBox="0 0 14 14" fill="none">
+                <path d="M7 1v8M4 6l3 3 3-3" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"/>
+                <path d="M2 10v2a1 1 0 0 0 1 1h8a1 1 0 0 0 1-1v-2" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"/>
+              </svg>
+              Download
+            </button>
+          </div>
+        </div>
+
+        <!-- Output views -->
+        <div class="output-body" id="outputBody">
+
+          <!-- Empty state -->
+          <div class="empty-state" id="emptyState">
+            <div class="empty-state__grid" aria-hidden="true"></div>
+            <div class="empty-state__content">
+              <pre class="empty-state__code">$ csv2json input.csv<span class="cursor">▌</span></pre>
+              <p class="empty-state__hint">Upload a CSV to get started</p>
+            </div>
+          </div>
+
+          <!-- JSON output -->
+          <div class="json-output" id="jsonOutput" style="display:none">
+            <pre class="json-pre" id="jsonPre"><code id="jsonCode"></code></pre>
+          </div>
+
+          <!-- Table preview -->
+          <div class="table-output" id="tableOutput" style="display:none">
+            <div class="table-wrap" id="tableWrap"></div>
+          </div>
+
+          <!-- Error state -->
+          <div class="error-state" id="errorState" style="display:none">
+            <div class="error-state__icon">!</div>
+            <p class="error-state__msg" id="errorMsg"></p>
+          </div>
+
+        </div>
+
+        <!-- Status bar -->
+        <div class="statusbar" id="statusbar">
+          <span class="statusbar__item" id="sbRows">—</span>
+          <span class="statusbar__sep"></span>
+          <span class="statusbar__item" id="sbCols">—</span>
+          <span class="statusbar__sep"></span>
+          <span class="statusbar__item" id="sbSize">—</span>
+          <span class="statusbar__spacer"></span>
+          <span class="statusbar__item statusbar__item--dim" id="sbTime">—</span>
+        </div>
+
+      </section>
+    </main>
+
+    <!-- CLI section -->
+    <section class="cli-section">
+      <div class="cli-section__title">// CLI usage</div>
+      <div class="cli-block">
+        <pre class="cli-pre"><code><span class="cli-comment"># Install globally</span>
+npm install -g csv2json-cli
+
+<span class="cli-comment"># Basic usage</span>
+csv2json input.csv
+
+<span class="cli-comment"># Options</span>
+csv2json input.csv -o output.json
+csv2json input.csv --delimiter ";" --no-header
+csv2json input.csv --no-types --no-nulls --indent 4
+csv2json data/*.csv --format keyed</code></pre>
+      </div>
+    </section>
+
+  </div><!-- /.app -->
+
+  <!-- Toast -->
+  <div class="toast" id="toast" role="alert" aria-live="assertive"></div>
+
+  <script src="js/converter.js"></script>
+  <script src="js/app.js"></script>
+</body>
+</html>

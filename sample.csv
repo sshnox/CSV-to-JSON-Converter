@@ -1,0 +1,6 @@
+id,name,email,age,score,active,notes
+1,Alice Johnson,alice@example.com,28,94.5,true,Top performer
+2,Bob Smith,bob@example.com,34,87.2,true,"Manager, team lead"
+3,Carol White,carol@example.com,25,,false,
+4,Dave Brown,dave@example.com,42,91.0,true,"He said ""great work"""
+5,Eve Davis,eve@example.com,31,76.8,true,Remote
